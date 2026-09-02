@@ -16,29 +16,44 @@ def divide(a, b):
     return a / b
 
 
-print("Simple Calculator")
-print("Operations: +, -, *, /")
+def main():
+    print("Simple Calculator")
+    print("Operations: +, -, *, /")
 
-try:
-    num1 = float(input("Enter the first number: "))
-    num2 = float(input("Enter the second number: "))
-    operation = input("Choose an operation (+, -, *, /): ")
+    while True:
+        try:
+            num1 = float(input("Enter the first number: "))
+            num2 = float(input("Enter the second number: "))
+            operation = input("Choose an operation (+, -, *, /) or q to quit: ")
 
-    if operation == '+':
-        result = add(num1, num2)
-    elif operation == '-':
-        result = subtract(num1, num2)
-    elif operation == '*':
-        result = multiply(num1, num2)
-    elif operation == '/':
-        result = divide(num1, num2)
-    else:
-        print("Invalid operation selected.")
-        raise SystemExit
+            if operation.lower() == 'q':
+                print("Goodbye!")
+                break
 
-    print(f"Result: {result}")
+            if operation == '+':
+                result = add(num1, num2)
+            elif operation == '-':
+                result = subtract(num1, num2)
+            elif operation == '*':
+                result = multiply(num1, num2)
+            elif operation == '/':
+                result = divide(num1, num2)
+            else:
+                print("Invalid operation selected.")
+                continue
 
-except ValueError:
-    print("Invalid input. Please enter numeric values.")
-except ZeroDivisionError as e:
-    print(e)
+            print(f"Result: {result}")
+
+        except ValueError:
+            print("Invalid input. Please enter numeric values.")
+        except ZeroDivisionError as e:
+            print(e)
+
+        again = input("Do you want to calculate again? (y/n): ").strip().lower()
+        if again != 'y':
+            print("Goodbye!")
+            break
+
+
+if __name__ == "__main__":
+    main()
