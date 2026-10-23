@@ -1,0 +1,38 @@
+{
+  "What is the capital of France?": [
+    "Paris",
+    "Toulouse",
+    "Nice",
+    "Avignon"
+  ],
+  "What is the capital of Japan?": [
+    "Tokyo",
+    "Kyoto",
+    "Osaka",
+    "Hiroshima"
+  ],
+  "What is the capital of Canada?": [
+    "Ottawa",
+    "Toronto",
+    "Vancouver",
+    "Montreal"
+  ],
+  "What is the capital of Australia?": [
+    "Canberra",
+    "Sydney",
+    "Melbourne",
+    "Brisbane"
+  ],
+  "What is the capital of Germany?": [
+    "Berlin",
+    "Munich",
+    "Frankfurt",
+    "Hamburg"
+  ],
+  "What is the capital of Italy?": [
+    "Rome",
+    "Milan",
+    "Naples",
+    "Venice"
+  ]
+}
