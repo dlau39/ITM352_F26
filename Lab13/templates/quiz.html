@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Question {{ question_number }}</title>
+</head>
+<body>
+    <main>
+        <h1>Question {{ question_number }} of {{ total_questions }}</h1>
+        <form method="post">
+            <fieldset>
+                <legend>{{ question }}</legend>
+                {% for option in options %}
+                    <div>
+                        <input id="option-{{ loop.index }}" type="radio" name="answer"
+                               value="{{ option }}" required>
+                        <label for="option-{{ loop.index }}">{{ option }}</label>
+                    </div>
+                {% endfor %}
+            </fieldset>
+            {% if error %}
+                <p role="alert">{{ error }}</p>
+            {% endif %}
+            <button type="submit">Submit answer</button>
+        </form>
+    </main>
+</body>
+</html>

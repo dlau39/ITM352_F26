@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quiz Results</title>
+</head>
+<body>
+    <main>
+        <h1>Quiz Results</h1>
+        <p>{{ name }}, you scored {{ score }} out of {{ total_questions }}.</p>
+        {% if is_high_score %}
+            <p>New high score!</p>
+        {% endif %}
+
+        <h2>Top scores</h2>
+        <ol>
+            {% for entry in scoreboard %}
+                <li>{{ entry.name }} — {{ entry.score }}</li>
+            {% endfor %}
+        </ol>
+        <a href="{{ url_for('index') }}">Play again</a>
+    </main>
+</body>
+</html>

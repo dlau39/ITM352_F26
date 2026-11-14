@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Quiz Game</title>
+</head>
+<body>
+    <main>
+        <h1>Welcome to the Quiz!</h1>
+        <p>Choose a category and see how many questions you can answer correctly.</p>
+
+        {% if error %}
+            <p role="alert">{{ error }}</p>
+        {% endif %}
+
+        {% if categories %}
+            <form method="post">
+                <label for="name">Your name</label>
+                <input id="name" name="name" maxlength="40" autocomplete="name">
+
+                <label for="category">Quiz category</label>
+                <select id="category" name="category" required>
+                    <option value="">Select a category</option>
+                    {% for category in categories %}
+                        <option value="{{ category.filename }}">{{ category.name }}</option>
+                    {% endfor %}
+                </select>
+
+                <button type="submit">Start the quiz</button>
+            </form>
+        {% else %}
+            <p>No quiz categories are available.</p>
+        {% endif %}
+
+        <h2>Top scores</h2>
+        {% if scoreboard %}
+            <ol>
+                {% for entry in scoreboard %}
+                    <li>{{ entry.name }} — {{ entry.score }}</li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p>No scores recorded yet.</p>
+        {% endif %}
+    </main>
+</body>
+</html>
