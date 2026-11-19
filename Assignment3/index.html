@@ -6,8 +6,50 @@
     <title>Welcome to the Quiz!</title>
 </head>
 <body>
-    <h1>Welcome to the Quiz!</h1>
-    <p>Test your knowledge with this interactive quiz!</p>
-    <a href="{{url_for('quiz')}}">Start the Quiz</a>
+    {% if error %}
+        <p>{{ error }}</p>
+    {% endif %}
+    {% if player_name %}
+        <h1>Welcome back, {{ player_name }}!</h1>
+        <p>Test your knowledge with an interactive quiz.</p>
+        <form method="POST">
+            <label for="category">Category:</label>
+            <select id="category" name="category" required>
+                <option value="">Select a category</option>
+                {% for category in categories %}
+                    <option value="{{ category.filename }}">{{ category.name }}</option>
+                {% endfor %}
+            </select>
+            <button type="submit">Start the Quiz</button>
+        </form>
+
+        <h2>Your Score History</h2>
+        {% if score_history %}
+            <ol>
+                {% for entry in score_history|reverse %}
+                    <li>{{ entry.score }} out of {{ entry.total_questions }}</li>
+                {% endfor %}
+            </ol>
+        {% else %}
+            <p>You have not completed a quiz yet.</p>
+        {% endif %}
+
+        {% if scoreboard %}
+            <h2>Top Scores</h2>
+            <ol>
+                {% for entry in scoreboard %}
+                    <li>{{ entry.name }}: {{ entry.score }}</li>
+                {% endfor %}
+            </ol>
+        {% endif %}
+    {% else %}
+        <h1>Welcome to the Quiz!</h1>
+        <p>First time here? Enter your name to get started.</p>
+        <form method="POST">
+            <label for="name">Name:</label>
+            <input id="name" name="name" maxlength="40" required>
+            <button type="submit">Continue</button>
+        </form>
+    {% endif %}
 </body>
 </html>

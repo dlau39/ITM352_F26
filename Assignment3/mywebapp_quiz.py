@@ -3,6 +3,7 @@ import os
 import random
 import re
 import secrets
+from datetime import timedelta
 from pathlib import Path
 
 from flask import Flask, redirect, render_template, request, session, url_for
@@ -10,6 +11,7 @@ from flask import Flask, redirect, render_template, request, session, url_for
 
 QUIZ_DIRECTORY = Path(__file__).resolve().parent
 SCOREBOARD_FILE = QUIZ_DIRECTORY / "scoreboard.json"
+PLAYER_HISTORY_FILE = QUIZ_DIRECTORY / "player_history.json"
 NUM_QUESTIONS_PER_QUIZ = 5
 
 
@@ -78,8 +80,45 @@ def record_score(name, score):
     return scoreboard, score > previous_high_score
 
 
-app = Flask(__name__)
+def load_player_history(player_id):
+    if not PLAYER_HISTORY_FILE.exists():
+        return []
+
+    try:
+        histories = json.loads(PLAYER_HISTORY_FILE.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as error:
+        raise ValueError("Unable to read player score history.") from error
+
+    if not isinstance(histories, dict):
+        raise ValueError("Player score history must be a JSON object.")
+    history = histories.get(player_id, [])
+    if not isinstance(history, list):
+        raise ValueError("Player score history must be a list.")
+    return history
+
+
+def record_player_score(player_id, score, total_questions):
+    if PLAYER_HISTORY_FILE.exists():
+        try:
+            histories = json.loads(PLAYER_HISTORY_FILE.read_text(encoding="utf-8"))
+        except json.JSONDecodeError as error:
+            raise ValueError("Unable to read player score history.") from error
+        if not isinstance(histories, dict):
+            raise ValueError("Player score history must be a JSON object.")
+    else:
+        histories = {}
+
+    history = histories.setdefault(player_id, [])
+    if not isinstance(history, list):
+        raise ValueError("Player score history must be a list.")
+    history.append({"score": score, "total_questions": total_questions})
+    PLAYER_HISTORY_FILE.write_text(json.dumps(histories, indent=2), encoding="utf-8")
+    return history
+
+
+app = Flask(__name__, template_folder=".")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY") or secrets.token_hex(32)
+app.permanent_session_lifetime = timedelta(days=365)
 
 
 def render_current_question(error=None, status=200):
@@ -111,43 +150,56 @@ def index():
     error = None
 
     if request.method == "POST":
-        filename = request.form.get("category", "")
-        try:
-            category_questions = load_questions(filename)
-        except ValueError as exception:
-            error = str(exception)
-        else:
-            if category_questions is None:
-                error = "Please select a valid quiz category."
+        if not session.get("player_id"):
+            player_name = request.form.get("name", "").strip()[:40]
+            if not player_name:
+                error = "Please enter your name."
             else:
-                sampled_questions = random.sample(
-                    list(category_questions.items()),
-                    min(NUM_QUESTIONS_PER_QUIZ, len(category_questions)),
-                )
-                quiz_questions = []
-                for question, answers in sampled_questions:
-                    quiz_questions.append(
-                        {
-                            "question": question,
-                            "correct_answer": answers[0],
-                            "options": random.sample(answers, len(answers)),
-                        }
+                session["player_id"] = secrets.token_urlsafe(16)
+                session["player_name"] = player_name
+                session.permanent = True
+                return redirect(url_for("index"))
+        else:
+            filename = request.form.get("category", "")
+            try:
+                category_questions = load_questions(filename)
+            except ValueError as exception:
+                error = str(exception)
+            else:
+                if category_questions is None:
+                    error = "Please select a valid quiz category."
+                else:
+                    sampled_questions = random.sample(
+                        list(category_questions.items()),
+                        min(NUM_QUESTIONS_PER_QUIZ, len(category_questions)),
                     )
+                    quiz_questions = []
+                    for question, answers in sampled_questions:
+                        quiz_questions.append(
+                            {
+                                "question": question,
+                                "correct_answer": answers[0],
+                                "options": random.sample(answers, len(answers)),
+                            }
+                        )
 
-                player_name = request.form.get("name", "").strip()[:40] or "Player"
-                session.clear()
-                session["quiz"] = {
-                    "name": player_name,
-                    "questions": quiz_questions,
-                    "question_number": 0,
-                    "score": 0,
-                }
-                return redirect(url_for("quiz"))
+                    session.pop("result", None)
+                    session["quiz"] = {
+                        "name": session["player_name"],
+                        "questions": quiz_questions,
+                        "question_number": 0,
+                        "score": 0,
+                    }
+                    return redirect(url_for("quiz"))
 
     return render_template(
         "index.html",
         categories=categories,
         scoreboard=load_scoreboard()[:10],
+        player_name=session.get("player_name"),
+        score_history=load_player_history(session["player_id"])
+        if session.get("player_id")
+        else [],
         error=error,
     ), (400 if error else 200)
 
@@ -155,7 +207,7 @@ def index():
 @app.route("/quiz", methods=["GET", "POST"])
 def quiz():
     quiz_state = session.get("quiz")
-    if not quiz_state:
+    if not quiz_state or not session.get("player_id"):
         return redirect(url_for("index"))
 
     if request.method == "POST":
@@ -171,6 +223,11 @@ def quiz():
 
         if quiz_state["question_number"] == len(quiz_state["questions"]):
             scoreboard, is_high_score = record_score(quiz_state["name"], quiz_state["score"])
+            record_player_score(
+                session["player_id"],
+                quiz_state["score"],
+                len(quiz_state["questions"]),
+            )
             session["result"] = {
                 "name": quiz_state["name"],
                 "score": quiz_state["score"],

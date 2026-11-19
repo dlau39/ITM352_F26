@@ -7,10 +7,11 @@
 </head>
 <body>
     <title>Quiz</title>
-    <h1>Question 1</h1>
     <form method="POST">
-
         <h1>Question {{question_number}}: {{question}}</h1>
+        {% if error %}
+            <p>{{ error }}</p>
+        {% endif %}
         {% for option in options %}
             <input type="radio" name="answer" value="{{option}}"> {{option}}<br>
         {% endfor %}
